@@ -17,7 +17,7 @@
     "@prisma/client": "^6.11.1",
     "discord-rpc": "^4.0.1",
     "discord.js": "^14.21.0",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.2.1",
     "node-fetch": "^3.3.2",
     "puppeteer": "^24.11.0"
   },
