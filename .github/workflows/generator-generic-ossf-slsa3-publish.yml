@@ -1,0 +1,99 @@
+# Generates SLSA provenance for your release artifacts.
+# Learn more: https://slsa.dev  |  Verifier: https://github.com/slsa-framework/slsa-verifier
+
+name: SLSA provenance (Node.js)
+
+on:
+  workflow_dispatch:
+  release:
+    types: [created]  # Runs when a new release is created
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & hash artifacts
+    runs-on: ubuntu-latest
+    outputs:
+      digests: ${{ steps.hash.outputs.digests }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      # Optional: run tests if you have them
+      - name: Run tests (optional)
+        run: |
+          if npm run | grep -q -E '^ *test'; then
+            npm test
+          else
+            echo "No test script found; skipping."
+          fi
+
+      # Optional: build step if your repo defines it (TS transpile, bundling, etc.)
+      - name: Build (optional)
+        run: |
+          if npm run | grep -q -E '^ *build'; then
+            npm run build
+          else
+            echo "No build script found; skipping."
+          fi
+
+      # Create one or more distributable tarballs (npm pack writes *.tgz)
+      - name: Package (npm pack)
+        id: pack
+        run: |
+          set -euo pipefail
+          # npm pack outputs the filename(s); capture them to a file list
+          npm pack | tee pack.out
+          # Expand to an actual file list (in case npm prints extra lines later)
+          files=$(grep -E '\.tgz$' pack.out | tr '\n' ' ')
+          echo "files=$files" >> "$GITHUB_OUTPUT"
+
+      # Hash the produced *.tgz files and export as base64 subjects for SLSA
+      - name: Generate subjects for provenance
+        id: hash
+        run: |
+          set -euo pipefail
+          files="${{ steps.pack.outputs.files }}"
+          if [ -z "$files" ]; then
+            echo "No .tgz files found from npm pack." >&2
+            exit 1
+          fi
+          echo "Will generate provenance for: $files"
+          echo "digests=$(sha256sum $files | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+      # Keep the artifacts available in the workflow run (nice for debugging)
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-packages
+          path: |
+            *.tgz
+
+  provenance:
+    name: Generate & upload provenance
+    needs: [build]
+    permissions:
+      actions: read     # To read the workflow path
+      id-token: write   # To sign the provenance
+      contents: write   # To attach assets to the release
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.digests }}"
+      upload-assets: true  # Attach provenance to the GitHub Release
