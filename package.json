@@ -13,7 +13,7 @@
   "author": "Aashwin FP",
   "license": "MIT",
   "dependencies": {
-    "@discordjs/builders": "^1.11.2",
+    "@discordjs/builders": "^1.11.3",
     "@prisma/client": "^6.11.1",
     "discord-rpc": "^4.0.1",
     "discord.js": "^14.21.0",
