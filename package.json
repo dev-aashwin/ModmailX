@@ -1,0 +1,38 @@
+{
+  "name": "xshield-discord-bot",
+  "version": "1.0.0",
+  "description": "A robust Discord moderation bot with self-role assignment, event logging, and webhook integration.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "deploy-commands": "node deploy-commands.js",
+    "test:webhook": "node testWebhook.js",
+    "test:webhook-embed": "node testWebhookEmbed.js",
+    "postinstall": "prisma generate || echo \"no prisma\""
+  },
+  "author": "Aashwin FP",
+  "license": "MIT",
+  "dependencies": {
+    "@discordjs/builders": "^1.11.2",
+    "@prisma/client": "^6.11.1",
+    "discord-rpc": "^4.0.1",
+    "discord.js": "^14.21.0",
+    "dotenv": "^16.5.0",
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^24.11.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "moderation",
+    "self-roles",
+    "webhook",
+    "logging"
+  ],
+  "devDependencies": {
+    "prisma": "^6.11.1"
+  }
+}

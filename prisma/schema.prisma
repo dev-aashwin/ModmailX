@@ -1,0 +1,53 @@
+// prisma/schema.prisma
+// Prisma schema for XShield Bot
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PG_CONNECTION_STRING")
+}
+
+model User {
+  id           BigInt   @id
+  username     String
+  discriminator String?
+  joined_at    DateTime?
+  created_at   DateTime @default(now())
+  infractions  Infraction[]
+  userRoles    UserRole[]
+}
+
+model Role {
+  id        BigInt   @id
+  name      String
+  color     String?
+  guild_id  BigInt
+  created_at DateTime @default(now())
+  userRoles UserRole[]
+}
+
+model Infraction {
+  id          Int      @id @default(autoincrement())
+  user        User     @relation(fields: [user_id], references: [id])
+  user_id     BigInt
+  guild_id    BigInt
+  action      String
+  moderator_id BigInt
+  reason      String?
+  duration    String?
+  created_at  DateTime @default(now())
+}
+
+model UserRole {
+  user      User   @relation(fields: [user_id], references: [id])
+  user_id   BigInt
+  role      Role   @relation(fields: [role_id], references: [id])
+  role_id   BigInt
+  guild_id  BigInt
+  assigned_at DateTime @default(now())
+
+  @@id([user_id, role_id, guild_id])
+}
